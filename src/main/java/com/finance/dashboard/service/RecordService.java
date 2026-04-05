@@ -11,6 +11,7 @@ import com.finance.dashboard.models.User;
 import com.finance.dashboard.repository.FinancialRecordRepository;
 import com.finance.dashboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class RecordService {
     private final UserRepository userRepository;
     private final RecordTransformer recordTransformer;
 
+    @CacheEvict(value = "dashboardSummary", key = "#username")
     public RecordResponse createRecord(RecordRequest request, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -48,6 +50,7 @@ public class RecordService {
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(value = "dashboardSummary", key = "#username")
     public RecordResponse updateRecord(Long id, RecordRequest request, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -73,6 +76,7 @@ public class RecordService {
         return recordTransformer.toResponse(updatedRecord);
     }
 
+    @CacheEvict(value = "dashboardSummary", key = "#username")
     public void deleteRecord(Long id, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));

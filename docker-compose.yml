@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: finance-dashboard-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=mysql
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SPRING_DATASOURCE_USERNAME=finance_user
+      - SPRING_DATASOURCE_PASSWORD=finance_pass
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - finance-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: finance-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - finance-network
+    volumes:
+      - redis_data:/data
+
+  mysql:
+    image: mysql:8.0
+    container_name: finance-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=finance_dashboard
+      - MYSQL_USER=finance_user
+      - MYSQL_PASSWORD=finance_pass
+      - MYSQL_ROOT_PASSWORD=root_pass
+    networks:
+      - finance-network
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+networks:
+  finance-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:

@@ -7,6 +7,7 @@ import com.finance.dashboard.models.User;
 import com.finance.dashboard.repository.FinancialRecordRepository;
 import com.finance.dashboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ public class DashboardService {
     private final FinancialRecordRepository recordRepository;
     private final UserRepository userRepository;
 
+    @Cacheable(value = "dashboardSummary", key = "#username")
     public DashboardSummaryResponse getDashboardSummary(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
