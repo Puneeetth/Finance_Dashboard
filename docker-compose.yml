@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   app:
@@ -35,7 +35,7 @@ services:
     image: mysql:8.0
     container_name: finance-mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       - MYSQL_DATABASE=finance_dashboard
       - MYSQL_USER=finance_user

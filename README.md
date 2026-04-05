@@ -440,7 +440,3 @@ Example validation error shape:
 4. Fetch `/api/records` to review stored entries
 5. Fetch `/api/dashboard/summary` to get totals and balance
 6. Use an `ADMIN` account to manage user roles and status
-
-## License
-
-Add your preferred license here if you plan to distribute the project publicly.
