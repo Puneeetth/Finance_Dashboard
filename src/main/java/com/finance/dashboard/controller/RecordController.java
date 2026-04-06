@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.finance.dashboard.dto.response.PageResponse;
+
 import java.security.Principal;
 import java.util.List;
 
@@ -27,8 +29,11 @@ public class RecordController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RecordResponse>> getAllRecords(Principal principal) {
-        return ResponseEntity.ok(recordService.getAllRecordsForUser(principal.getName()));
+    public ResponseEntity<PageResponse<RecordResponse>> getAllRecords(
+            Principal principal,
+            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize) {
+        return ResponseEntity.ok(recordService.getAllRecordsForUser(principal.getName(), pageNo, pageSize));
     }
 
     @PutMapping("/{id}")

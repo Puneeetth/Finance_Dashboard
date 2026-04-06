@@ -1,4 +1,5 @@
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\config\AppConfig.java
+E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\config\OpenApiConfig.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\controller\AuthController.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\controller\DashboardController.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\controller\RecordController.java
@@ -8,6 +9,7 @@ E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\das
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\dto\request\RegisterRequest.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\dto\response\AuthResponse.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\dto\response\DashboardSummaryResponse.java
+E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\dto\response\PageResponse.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\dto\response\RecordResponse.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\dto\response\UserResponse.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\enums\RecordType.java
@@ -27,6 +29,7 @@ E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\das
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\security\JwtUtil.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\security\SecurityConfig.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\service\AuthService.java
+E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\service\CleanupService.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\service\DashboardService.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\service\RecordService.java
 E:\BACKEND\SPRING BOOT(Projects)\finance-dashboard\src\main\java\com\finance\dashboard\service\UserService.java

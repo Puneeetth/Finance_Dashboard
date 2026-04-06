@@ -1,442 +1,86 @@
 # Finance Dashboard Backend
 
-A Spring Boot backend for managing personal or team financial records with JWT-based authentication, role-based access control, and dashboard summaries for income and expenses.
+A robust, scalable Spring Boot REST API for managing personal or enterprise finances. It acts as the core backend for a "Finance Dashboard," providing secure authentication, role-based access, fast analytics using Redis caching, and intelligent data management.
 
-## Overview
+## 🌟 Key Features
 
-This project exposes REST APIs for:
+*   **Security First:** Stateless JWT-based authentication and Role-Based Access Control (RBAC). Roles include `VIEWER`, `ANALYST`, and `ADMIN`, providing strict authorization on controller endpoints.
+*   **High Performance Caching:** Integrated with Redis (`@Cacheable`, `@CacheEvict`) to cache heavy dashboard summary computations. Modifying records seamlessly expires stale caches.
+*   **Universal Soft Delete:** Ensures data integrity while adhering to audit/compliance requirements. Deleted accounts and financial records are intelligently persisted and gracefully handled via custom Hibernate `@SQLDelete` modifiers. Soft-deleted elements auto-purge after a 30-Day Grace Period via a scheduled background task.
+*   **Optimized Data Retrieval:** Cursor/Offset based **Pagination** integrated on major endpoints (like User list and Record list) natively via Spring Data's `PageRequest`, resulting in lightweight, high-performance data fetches regardless of table size.
+*   **Interactive Documentation:** Automated API documentation powered by OpenAPI 3.0 / Swagger UI. Full visualization of Request/Response DTOs and one-click testing using built-in JWT Bearer tokens authorization.
+*   **Containerized Production Ready Setup:** Full orchestration of the App, MySQL, and Redis utilizing Docker and `docker-compose`.
 
-- user registration and login
-- secure access using JWT bearer tokens
-- role-based authorization for `ADMIN`, `ANALYST`, and `VIEWER`
-- creating, updating, listing, and deleting financial records
-- generating a dashboard summary with totals and category-wise breakdowns
-- administering users and their status/roles
+## 🛠 Tech Stack
 
-The application uses Spring Security for authentication and authorization, Spring Data JPA for persistence, and MySQL as the default database.
+*   **Java 21**
+*   **Spring Boot 3.x**
+    *   Spring Web
+    *   Spring Security
+    *   Spring Data JPA
+    *   Spring Cache & Data Redis
+    *   Springdoc OpenAPI (Swagger)
+*   **MySQL 8.0**
+*   **Redis 7** (Alpine Stack)
+*   **Lombok** (Boilerplate reduction)
+*   **Docker & Docker Compose**
 
-## Current Status
+---
 
-The codebase is close to runnable, but the current build is not fully green with the checked-in configuration.
+## 🚀 Quick Start / Deployment
 
-- `pom.xml` uses Spring Boot `4.0.1`
-- `AppConfig` still creates `DaoAuthenticationProvider` using an older API style
-- the existing `compile.log` shows the project currently fails during compilation for that reason
+This application is fully dockarized, making local deployment seamless.
 
-If you want this project to run immediately, the authentication provider setup needs a small compatibility fix first.
+### Prerequisites
 
-## Features
+*   Docker Desktop or Docker Engine installed on your machine.
 
-- JWT authentication with stateless sessions
-- BCrypt password hashing
-- input validation with Jakarta Validation
-- global exception handling
-- financial record ownership rules
-- dashboard summary with:
-  - total income
-  - total expenses
-  - net balance
-  - category totals for income and expense
-- admin-only user management endpoints
+### Instructions
 
-## Tech Stack
+1.  Clone the repository.
+2.  Open your terminal inside the root directory.
+3.  Run the orchestration command:
 
-- Java 21
-- Spring Boot 4.0.1
-- Spring Web
-- Spring Data JPA
-- Spring Security
-- MySQL
-- Lombok
-- JJWT (`0.11.5`)
-- JUnit 5
-- Mockito
-- Maven
+    ```bash
+    docker-compose up --build -d
+    ```
 
-## Project Structure
+Docker will:
+1.  Spin up a customized `finance-mysql` container.
+2.  Spin up a heavily optimized `finance-redis` container.
+3.  Compile your Java Application inside a Maven multi-stage docker image and host it at `localhost:8080`.
 
-```text
-src
-|-- main
-|   |-- java/com/finance/dashboard
-|   |   |-- config
-|   |   |-- controller
-|   |   |-- dto
-|   |   |-- enums
-|   |   |-- exception
-|   |   |-- models
-|   |   |-- repository
-|   |   |-- security
-|   |   |-- service
-|   |   `-- Transformer
-|   `-- resources
-|       `-- application.properties
-`-- test
-    `-- java/com/finance/dashboard/service
-```
-
-## Domain Model
-
-### User
-
-Represents an authenticated platform user.
-
-Fields:
-
-- `id`
-- `username`
-- `email`
-- `password`
-- `role`
-- `status`
-- `createdAt`
-- `updatedAt`
-
-### FinancialRecord
-
-Represents one income or expense entry owned by a user.
-
-Fields:
-
-- `id`
-- `amount`
-- `type`
-- `category`
-- `date`
-- `description`
-- `user`
-- `createdAt`
-- `updatedAt`
-
-## Roles and Permissions
-
-### Roles
-
-- `ADMIN`
-- `ANALYST`
-- `VIEWER`
-
-### Access Rules
-
-| Action | VIEWER | ANALYST | ADMIN |
-|---|---|---|---|
-| Register / Login | Yes | Yes | Yes |
-| View own records | Yes | Yes | Yes |
-| Create record | No | Yes | Yes |
-| Update own record | No | Yes | Yes |
-| Update any record | No | No | Yes |
-| Delete record | No | No | Yes |
-| View dashboard summary | No | Yes | Yes |
-| Manage users | No | No | Yes |
-
-Notes:
-
-- all endpoints except `/api/auth/**` require authentication
-- records are user-scoped for normal access
-- only admins can manage user roles and status
-
-## API Base URL
-
-```text
-http://localhost:8080
-```
-
-## Authentication
-
-After successful registration or login, the API returns a JWT token.
-
-Use it in protected requests:
-
-```http
-Authorization: Bearer <your-jwt-token>
-```
-
-## API Endpoints
-
-### Auth
-
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| `POST` | `/api/auth/register` | Public | Register a new user |
-| `POST` | `/api/auth/login` | Public | Authenticate and get JWT |
-
-### Records
-
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| `POST` | `/api/records` | `ADMIN`, `ANALYST` | Create a financial record |
-| `GET` | `/api/records` | Authenticated | Get records for the logged-in user |
-| `PUT` | `/api/records/{id}` | `ADMIN`, `ANALYST` | Update a record |
-| `DELETE` | `/api/records/{id}` | `ADMIN` | Delete a record |
-
-### Dashboard
-
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| `GET` | `/api/dashboard/summary` | `ADMIN`, `ANALYST` | Get financial summary for current user |
-
-### Users
-
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| `GET` | `/api/users` | `ADMIN` | List all users |
-| `GET` | `/api/users/{id}` | `ADMIN` | Get user by id |
-| `PUT` | `/api/users/{id}/status?status=ACTIVE` | `ADMIN` | Update user status |
-| `PUT` | `/api/users/{id}/role?role=ANALYST` | `ADMIN` | Update user role |
-
-## Request Payloads
-
-### Register
-
-```json
-{
-  "username": "john_doe",
-  "email": "john@example.com",
-  "password": "secret123",
-  "role": "ANALYST"
-}
-```
-
-### Login
-
-```json
-{
-  "username": "john_doe",
-  "password": "secret123"
-}
-```
-
-### Create or Update Record
-
-```json
-{
-  "amount": 2500.00,
-  "type": "INCOME",
-  "category": "Salary",
-  "date": "2026-04-05",
-  "description": "Monthly salary"
-}
-```
-
-## Sample Responses
-
-### Auth Response
-
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiJ9...",
-  "user": {
-    "id": 1,
-    "username": "john_doe",
-    "email": "john@example.com",
-    "role": "ANALYST",
-    "status": "ACTIVE",
-    "createdAt": "2026-04-05T21:00:00"
-  }
-}
-```
-
-### Record Response
-
-```json
-{
-  "id": 10,
-  "amount": 2500.00,
-  "type": "INCOME",
-  "category": "Salary",
-  "date": "2026-04-05",
-  "description": "Monthly salary",
-  "createdAt": "2026-04-05T21:10:00"
-}
-```
-
-### Dashboard Summary Response
-
-```json
-{
-  "totalIncome": 5000.00,
-  "totalExpenses": 2000.00,
-  "netBalance": 3000.00,
-  "categoryTotals": {
-    "INCOME - Salary": 5000.00,
-    "EXPENSE - Rent": 2000.00
-  }
-}
-```
-
-## Validation Rules
-
-### `RegisterRequest`
-
-- `username` is required
-- `email` is required and must be valid
-- `password` is required
-- `role` is required and must be one of `VIEWER`, `ANALYST`, `ADMIN`
-
-### `LoginRequest`
-
-- `username` is required
-- `password` is required
-
-### `RecordRequest`
-
-- `amount` is required
-- `type` is required
-- `category` is required
-- `date` is required
-- `description` is optional
-
-Note:
-
-- the code uses `@Min(0)` on `BigDecimal amount`; in practice `@DecimalMin("0.0")` is a better fit for decimal validation
-
-## Configuration
-
-Current application properties:
-
-```properties
-spring.application.name=finance-dashboard
-server.port=8080
-
-spring.datasource.url=jdbc:mysql://localhost:3306/finance_dashboard?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-spring.datasource.username=root
-spring.datasource.password=root
-
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
-
-jwt.secret=94a08da1fecbb6e8b46990538c7b50b2a8d11d141e6a17b6a482b8146747192a
-jwt.expiration=86400000
-```
-
-### Recommended Local Changes
-
-Before using this in a real environment, update:
-
-- database username and password
-- JWT secret
-- `spring.jpa.hibernate.ddl-auto`
-- SQL logging settings as needed
-
-A safer production-style pattern is to move secrets to environment variables, for example:
-
-```properties
-spring.datasource.url=${DB_URL}
-spring.datasource.username=${DB_USERNAME}
-spring.datasource.password=${DB_PASSWORD}
-jwt.secret=${JWT_SECRET}
-jwt.expiration=${JWT_EXPIRATION:86400000}
-```
-
-## Prerequisites
-
-- Java 21
-- Maven 3.9+
-- MySQL 8+
-
-## Database Setup
-
-Create the database before starting the application:
-
-```sql
-CREATE DATABASE finance_dashboard;
-```
-
-Because JPA is configured with `ddl-auto=update`, the tables are created or updated automatically after the application starts successfully.
-
-## Running the Project
-
-### 1. Clone the repository
-
+To stop the services:
 ```bash
-git clone <your-repository-url>
-cd finance-dashboard
+docker-compose down
 ```
 
-### 2. Configure MySQL and application properties
+---
 
-Edit `src/main/resources/application.properties` to match your local setup.
+## 📄 API Documentation
 
-### 3. Start the application
+Once the app is running (via Docker or local IDE), access the Interactive Swagger UI Interface:
 
-```bash
-mvn spring-boot:run
-```
+👉 **[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)**
 
-### 4. Build the project
+### How to Authenticate & Test endpoints:
 
-```bash
-mvn clean package
-```
+1.  Go to `POST /api/auth/register` to create a new `ACTIVE` user. (Requires a generic body matching the displayed DTO schema).
+2.  Copy the generated JSON Web Token (`token`) from the response.
+3.  Click the **"Authorize"** button near the top of the Swagger UI dashboard.
+4.  Paste your token into the Value box.
+5.  Now you can freely invoke and test `GET /api/records`, `GET /api/dashboard/summary`, `GET /api/users` (Admin only), etc!
 
-## Testing
+---
 
-Current automated test coverage in the repository includes:
+## 🏗 System Architecture Details
 
-- `DashboardServiceTest`
+### Pagination Details
+All record and user lists are structured using generic `PageResponse` DTO wrappers.
+You can append query arguments like `?pageNo=1&pageSize=5`. (Defaults to `pageNo=0, pageSize=10`).
 
-Run tests with:
+### Caching Strategy
+A user's heavy `DashboardSummary` calculations are actively cached inside Redis as serialized bytes under `dashboardSummary::[username]`. Adding, modifying, or deleting a `FinancialRecord` executes a direct cache invalidation routine.
 
-```bash
-mvn test
-```
-
-## Error Handling
-
-The application includes a global exception handler that returns structured responses for:
-
-- resource not found
-- unauthorized access
-- invalid arguments
-- bean validation failures
-- unexpected server errors
-
-Example validation error shape:
-
-```json
-{
-  "timestamp": "2026-04-05T21:15:00",
-  "status": 400,
-  "errors": {
-    "username": "Username is required"
-  }
-}
-```
-
-## Security Notes
-
-- authentication is stateless
-- CSRF is disabled for API usage
-- CORS is enabled with default Spring handling
-- passwords are stored with BCrypt hashing
-- only `/api/auth/**` is publicly accessible
-
-## Known Issues
-
-- the project currently fails compilation due to `DaoAuthenticationProvider` construction in [`AppConfig.java`](src/main/java/com/finance/dashboard/config/AppConfig.java)
-- sensitive defaults are committed in `application.properties`:
-  - MySQL username/password
-  - JWT secret
-- there is limited automated test coverage
-- package name `Transformer` uses uppercase, which is unusual for Java package conventions
-
-## Suggested Improvements
-
-- fix Spring Security provider configuration for Spring Boot 4
-- externalize secrets and database config
-- add integration tests for authentication and controllers
-- add pagination/filtering for records
-- add Swagger or OpenAPI documentation
-- add Docker support
-- add audit logging and refresh token support
-
-## Example Workflow
-
-1. Register a user with role `ANALYST`
-2. Login and copy the JWT token
-3. Create income and expense records
-4. Fetch `/api/records` to review stored entries
-5. Fetch `/api/dashboard/summary` to get totals and balance
-6. Use an `ADMIN` account to manage user roles and status
+### Reactivation & Soft Delete Protocol
+When a user is deleted, their `deleted` column flips. If that user attempts a future login during the 30-Day grace duration, the Application intercepts the authentication cycle, auto-reactivates the profile by zeroing out the date fields, and completes the sign-in uninterrupted.

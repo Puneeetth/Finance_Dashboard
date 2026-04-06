@@ -14,6 +14,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import com.finance.dashboard.dto.response.PageResponse;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,14 +45,26 @@ public class RecordService {
         return recordTransformer.toResponse(savedRecord);
     }
 
-    public List<RecordResponse> getAllRecordsForUser(String username) {
+    public PageResponse<RecordResponse> getAllRecordsForUser(String username, int pageNo, int pageSize) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        return recordRepository.findByUserIdOrderByDateDesc(user.getId())
+        Pageable pageable = PageRequest.of(pageNo, pageSize);
+        Page<FinancialRecord> recordsPage = recordRepository.findByUserIdOrderByDateDesc(user.getId(), pageable);
+
+        List<RecordResponse> content = recordsPage.getContent()
                 .stream()
                 .map(recordTransformer::toResponse)
                 .collect(Collectors.toList());
+
+        return PageResponse.<RecordResponse>builder()
+                .content(content)
+                .pageNo(recordsPage.getNumber())
+                .pageSize(recordsPage.getSize())
+                .totalElements(recordsPage.getTotalElements())
+                .totalPages(recordsPage.getTotalPages())
+                .last(recordsPage.isLast())
+                .build();
     }
 
     @CacheEvict(value = "dashboardSummary", key = "#username")

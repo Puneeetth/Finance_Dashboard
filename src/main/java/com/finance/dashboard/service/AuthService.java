@@ -26,11 +26,11 @@ public class AuthService {
     private final UserTransformer userTransformer;
 
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("Username is already taken");
+        if (userRepository.findByUsernameIncludingDeleted(request.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("Username is already taken or scheduled for deletion. Please login to reactivate.");
         }
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email is already in use");
+        if (userRepository.findByEmailIncludingDeleted(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email is already in use or scheduled for deletion. Please login to reactivate.");
         }
 
         User user = User.builder()
@@ -39,6 +39,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole())
                 .status(UserStatus.ACTIVE)
+                .deleted(false)
                 .build();
 
         userRepository.save(user);
@@ -58,8 +59,15 @@ public class AuthService {
                 )
         );
 
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsernameIncludingDeleted(request.getUsername())
                 .orElseThrow();
+
+        // Reactivate soft-deleted user
+        if (user.isDeleted()) {
+            user.setDeleted(false);
+            user.setDeletedAt(null);
+            userRepository.save(user);
+        }
 
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new IllegalArgumentException("User account is inactive");

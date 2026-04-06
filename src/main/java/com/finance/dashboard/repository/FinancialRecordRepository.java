@@ -8,12 +8,15 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Repository
 public interface FinancialRecordRepository extends JpaRepository<FinancialRecord, Long> {
     
-    List<FinancialRecord> findByUserIdOrderByDateDesc(Long userId);
+    Page<FinancialRecord> findByUserIdOrderByDateDesc(Long userId, Pageable pageable);
     
     @Query("SELECT COALESCE(SUM(f.amount), 0) FROM FinancialRecord f WHERE f.user.id = :userId AND f.type = 'INCOME'")
     BigDecimal calculateTotalIncome(@Param("userId") Long userId);
@@ -23,4 +26,7 @@ public interface FinancialRecordRepository extends JpaRepository<FinancialRecord
     
     @Query("SELECT f.category, COALESCE(SUM(f.amount), 0) FROM FinancialRecord f WHERE f.user.id = :userId AND f.type = :type GROUP BY f.category")
     List<Object[]> calculateCategoryTotals(@Param("userId") Long userId, @Param("type") RecordType type);
+
+    @Query(value = "DELETE FROM financial_records WHERE deleted = true AND deleted_at < :date", nativeQuery = true)
+    void purgeOldRecords(@Param("date") LocalDateTime date);
 }
